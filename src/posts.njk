@@ -1,0 +1,12 @@
+---
+layout: page.njk
+pagination:
+  data: collections.allPosts
+  size: 1
+  alias: post
+permalink: posts/{{ post.slug }}/
+---
+
+<h1>
+  {{ post.title }}
+</h1>

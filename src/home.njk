@@ -1,0 +1,28 @@
+---
+layout: page.njk
+permalink: /
+---
+
+{%- set baseURL = "/posts" -%}
+<p>All the posts</p>
+<ul>
+  {%- for post in collections.allPosts -%}
+  <li>
+    <a href="{{ baseURL }}/{{ post.slug }}" class=""
+      >{{ post.country }} — {{ post.title }}</a
+    >
+  </li>
+  {%- endfor -%}
+</ul>
+
+{%- set categoryData = collections.postsByCategories[0].categoryData -%}
+<p>Paginated posts by country</p>
+<ul>
+  {%- for country in categoryData -%}
+  <li>
+    <a href="{{ baseURL }}{{ country.slug }}" class="">{{ country.name }}</a>
+  </li>
+  {%- endfor -%}
+</ul>
+
+{# {% console categoryData, 'categoryData' %} #}
