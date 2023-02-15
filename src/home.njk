@@ -3,14 +3,11 @@ layout: page.njk
 permalink: /
 ---
 
-{%- set baseURL = "/posts" -%}
 <p>All the posts</p>
 <ul>
   {%- for post in collections.allPosts -%}
   <li>
-    <a href="{{ baseURL }}/{{ post.slug }}" class=""
-      >{{ post.country }} — {{ post.title }}</a
-    >
+    <a href="{{ post.slug }}" class="">{{ post.country }} — {{ post.title }}</a>
   </li>
   {%- endfor -%}
 </ul>
@@ -20,7 +17,7 @@ permalink: /
 <ul>
   {%- for country in categoryData -%}
   <li>
-    <a href="{{ baseURL }}{{ country.slug }}" class="">{{ country.name }}</a>
+    <a href="{{ country.slug }}" class="">{{ country.name }}</a>
   </li>
   {%- endfor -%}
 </ul>

@@ -4,15 +4,15 @@ pagination:
   data: collections.postsByCategories
   size: 1
   alias: postsCategories
-permalink: posts/{{ postsCategories.slug }}/
+permalink: /{{ postsCategories.slug }}/
 ---
 
 <h1>{{ postsCategories.categoryName }} posts page {{postsCategories.currentPage}} of {{postsCategories.totalPages}}</h1>
-{%- set baseURL = "/posts" -%}
+
 <ul>
   {%- for post in postsCategories.posts -%}
   <li>
-    <a href="/posts/{{ post.slug }}" class=""
+    <a href="{{ post.slug }}" class=""
       >{{ post.country }} — {{ post.title }}</a
     >
   </li>
@@ -24,8 +24,9 @@ permalink: posts/{{ postsCategories.slug }}/
 
   {%- if postsCategories.isFirstPage -%}
   <p>Previous</p>
-  {%- else -%} {%- set slug = postsCategories.pageSlugs.previous -%}
-  <a href="{{ baseURL }}{{ slug if slug !='/' else '' }}/">
+  {%- else -%} 
+  {%- set slug = postsCategories.pageSlugs.previous -%}
+  <a href="{{ slug if slug !='/' else '' }}">
     <p>Previous</p>
   </a>
   {%- endif -%}
@@ -40,7 +41,7 @@ permalink: posts/{{ postsCategories.slug }}/
     <li>
       {%- set slug = postsCategories.pageSlugs.all[loop.index - 1] -%}
       <a
-        href="{{ baseURL }}{{ slug if slug !='/' else '' }}/"
+        href="{{ slug if slug !='/' else '' }}"
         >{{ loop.index }}</a
       >
     </li>
@@ -48,9 +49,9 @@ permalink: posts/{{ postsCategories.slug }}/
   </ul>
 
   {%- if postsCategories.isLastPage -%}
- 
+  <p >Next</p>
   {%- else -%} {%- set slug = postsCategories.pageSlugs.next -%}
-  <a href="{{ baseURL }}{{ slug if slug !='/' else '' }}/">
+  <a href="{{ baseURL }}{{ slug if slug !='/' else '' }}">
     <p >Next</p>
   </a>
   {%- endif -%}

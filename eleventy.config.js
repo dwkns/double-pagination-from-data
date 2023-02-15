@@ -7,85 +7,98 @@ let data = [
   {
     title: "post 1",
     country: "US",
-    slug: "us/post-1/",
+    content: "<p>some content</p>",
   },
   {
     title: "post 2",
     country: "US",
-    slug: "us/post-2/",
+    content: "<p>some content</p>",
   },
   {
     title: "post 3",
     country: "US",
-    slug: "us/post-3/",
+    content: "<p>some content</p>",
   },
   {
     title: "post 4",
     country: "US",
-    slug: "us/post-4/",
+    content: "<p>some content</p>",
   },
   {
     title: "post 5",
     country: "US",
-    slug: "us/post-5/",
+    content: "<p>some content</p>",
   },
   {
     title: "post 6",
     country: "GB",
-    slug: "gb/post-6/",
+    content: "<p>some content</p>",
   },
   {
     title: "post 7",
     country: "GB",
-    slug: "gb/post-7/",
+    content: "<p>some content</p>",
   },
   {
     title: "post 8",
     country: "GB",
-    slug: "gb/post-8/",
+    content: "<p>some content</p>",
   },
   {
     title: "post 9",
     country: "GB",
-    slug: "gb/post-9/",
+    content: "<p>some content</p>",
   },
   {
     title: "post 10",
     country: "GB",
-    slug: "gb/post-10/",
+    content: "<p>some content</p>",
   },
   {
     title: "post 11",
     country: "GB",
-    slug: "gb/post-11/",
+    content: "<p>some content</p>",
   },
   {
     title: "post 12",
     country: "GB",
-    slug: "gb/post-12/",
+    content: "<p>some content</p>",
   },
   {
     title: "post 13",
     country: "GB",
-    slug: "gb/post-13/",
+    content: "<p>some content</p>",
   },
   {
     title: "post 14",
     country: "GB",
-    slug: "gb/post-14/",
   },
 ];
+
+let uniqueCategories = ["GB", "US"]; // array of unique categories
+let numberOfresultsPerPage = 3; // number of results per page
+let slugPrefix = "articles/"; // the prefix for the slug could be articles/ or blog/ etc
+
 module.exports = (eleventyConfig) => {
   // Add a collection of all the posts
+  // Filter out the /gb/ part from any posts with country == GB
   eleventyConfig.addCollection("allPosts", (collection) => {
+    opts = { lower: true };
+    data.forEach((post) => {
+      let titleAsSlug = slugify(post.title, opts);
+      let countryAsSlug = slugify(post.country, opts);
+      post.country == "GB"
+        ? (post.slug = `/${slugPrefix}${titleAsSlug}/`)
+        : (post.slug = `/${countryAsSlug}/${slugPrefix}${titleAsSlug}/`);
+    });
     return data;
   });
 
   // Add a collection of all the posts sorted by category
+  // This will be used to paginate the posts by category
+  // Also filters out the /gb/ part from any posts with country == GB
   eleventyConfig.addCollection("postsByCategories", (collection) => {
-    let numberOfresultsPerPage = 3; // number of results per page
-    let uniqueCategories = ["GB", "US"]; // array of unique categories
-
+    // console.log(`[ data ]:`, data);
     let postsByCategories = [];
     let pageDataForAllCategories = [];
     let categoryData = [];
@@ -102,16 +115,27 @@ module.exports = (eleventyConfig) => {
       // chunk up all the posts in this category by the number of results/page we want.
       let chunks = _.chunk(allPostinCurrentCategory, numberOfresultsPerPage);
 
-      // create a slug for the category
-      let slug = `/${slugify(categoryName, { lower: true })}`;
+      // Filter out slug for GB posts
+      let slug = "";
+      console.log(`[ categoryName ]:`, categoryName);
+      categoryName == "GB"
+        ? (slug = `/${slugPrefix}`)
+        : (slug = `/${slugify(categoryName, { lower: true })}/${slugPrefix}`);
+      console.log(`[ slug ]:`, slug);
 
       // create an array of pageSlugs for each chunk of posts
       let pageSlugs = [];
       for (let i = 0; i < chunks.length; i++) {
-        let thisSlug = `${slug}`;
+        let thisSlug = slug;
         // If there is more than one page of results.
         if (i > 0) {
-          thisSlug = `${slug}/${i + 1}`;
+          thisSlug = `${i + 1}`;
+
+          // check to see if the slug has a prefix
+          // don't want to add an addianal / if its not needed.
+          if (slug != "") {
+            thisSlug = `${slug}${i + 1}/`;
+          }
         }
         pageSlugs.push(`${thisSlug}`);
       }
