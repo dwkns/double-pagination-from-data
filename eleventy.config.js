@@ -3,166 +3,166 @@ const { logToConsole } = require("dwkns-eleventy-plugins");
 const _ = require("lodash");
 const slugify = require("slugify");
 const util = require("util");
-let data = [
-  {
-    title: "post 1",
-    country: "US",
-    content: "<p>some content</p>",
-  },
-  {
-    title: "post 2",
-    country: "US",
-    content: "<p>some content</p>",
-  },
-  {
-    title: "post 3",
-    country: "US",
-    content: "<p>some content</p>",
-  },
-  {
-    title: "post 4",
-    country: "US",
-    content: "<p>some content</p>",
-  },
-  {
-    title: "post 5",
-    country: "US",
-    content: "<p>some content</p>",
-  },
-  {
-    title: "post 6",
-    country: "GB",
-    content: "<p>some content</p>",
-  },
-  {
-    title: "post 7",
-    country: "GB",
-    content: "<p>some content</p>",
-  },
-  {
-    title: "post 8",
-    country: "GB",
-    content: "<p>some content</p>",
-  },
-  {
-    title: "post 9",
-    country: "GB",
-    content: "<p>some content</p>",
-  },
-  {
-    title: "post 10",
-    country: "GB",
-    content: "<p>some content</p>",
-  },
-  {
-    title: "post 11",
-    country: "GB",
-    content: "<p>some content</p>",
-  },
-  {
-    title: "post 12",
-    country: "GB",
-    content: "<p>some content</p>",
-  },
-  {
-    title: "post 13",
-    country: "GB",
-    content: "<p>some content</p>",
-  },
-  {
-    title: "post 14",
-    country: "GB",
-  },
-];
+const data = require("./src/_data/data.js");
 
-let uniqueCategories = ["GB", "US"]; // array of unique categories
-let numberOfresultsPerPage = 3; // number of results per page
 let slugPrefix = "articles/"; // the prefix for the slug could be articles/ or blog/ etc
 
+/**
+ * Returns an array of unique categories from an array of objects that has a key that matches the categoryKey
+ * @param {Array} arrayOfObjects // array of objects
+ * @param {String} categoryKey // the key to use to get the unique categories
+ * @returns {Array} // array of unique categories
+ */
+const getUniqueCategories = (arrayOfObjects, categoryKey) => {
+  return [...new Set(arrayOfObjects.map((item) => item[categoryKey]))];
+};
+
 module.exports = (eleventyConfig) => {
+  let categoryData = [];
+
   // Add a collection of all the posts
-  // Filter out the /gb/ part from any posts with country == GB
   eleventyConfig.addCollection("allPosts", (collection) => {
-    opts = { lower: true };
+    // create a slug for each post
     data.forEach((post) => {
-      let titleAsSlug = slugify(post.title, opts);
-      let countryAsSlug = slugify(post.country, opts);
-      post.country == "GB"
-        ? (post.slug = `/${slugPrefix}${titleAsSlug}/`)
-        : (post.slug = `/${countryAsSlug}/${slugPrefix}${titleAsSlug}/`);
+      const opts = { lower: true };
+      const prefix = slugify(slugPrefix, opts);
+      const title = slugify(post.title, opts);
+      post.slug = `/${prefix}/${title}/`;
+      post.typeAndCategory = `${post.type.toLowerCase()}-${post.category.toLowerCase()}`;
     });
     return data;
   });
 
-  // Add a collection of all the posts sorted by category
-  // This will be used to paginate the posts by category
-  // Also filters out the /gb/ part from any posts with country == GB
-  eleventyConfig.addCollection("postsByCategories", (collection) => {
-    // console.log(`[ data ]:`, data);
-    let postsByCategories = [];
-    let pageDataForAllCategories = [];
-    let categoryData = [];
+  const createIndexSlugsForChunksOfPosts = (chunks, slug = "") => {
+    let indexPageSlugs = chunks.map((chunk, index) => {
+      // return the just slug if this is the first page
+      // otherwise return the slug and /2/ /3/ etc for the next index pages
+      return index == 0 ? slug : `${slug}${index + 1}/`;
+    });
+    return indexPageSlugs;
+  };
 
-    // loop over the unique categories
-    uniqueCategories.forEach((categoryName) => {
-      let allPostinCurrentCategory = [];
-      data.forEach((post) => {
-        if (post.country == categoryName) {
-          allPostinCurrentCategory.push(post);
+  function chunkPostsByTypeAndCategory(
+    posts,
+    typesAndCategories,
+    resultsPerIndexPage = 3
+  ) {
+    pageDataForAllCategories = typesAndCategories.map((categoryName) => {
+      const typeOrCategoryFromTypeAndCategory = (typeAndCategory) => {
+        // accepts type-category or any-category or type-all
+        if (typeAndCategory.startsWith("any-")) {
+          return typeAndCategory.slice("any-".length);
+        }
+        if (typeAndCategory.endsWith("-all")) {
+          return typeAndCategory.slice(0, -"-all".length);
+        }
+        return typeAndCategory;
+      };
+
+      // filter out all the posts that match the current category
+      // or if the current category is 'all' then return all the posts
+      const postsInThisCategory = posts.filter((post, index) => {
+        console.log(`[ categoryName ]:`, categoryName);
+        let typeOrCategory = typeOrCategoryFromTypeAndCategory(categoryName);
+
+        if (
+          post.typeAndCategory == categoryName ||
+          categoryName == "any-all" ||
+          typeOrCategory == post.category ||
+          typeOrCategory == post.type
+        ) {
+          return true;
         }
       });
 
-      // chunk up all the posts in this category by the number of results/page we want.
-      let chunks = _.chunk(allPostinCurrentCategory, numberOfresultsPerPage);
+      console.log(`[ posts in ${categoryName}]:`, postsInThisCategory.length);
 
-      // Filter out slug for GB posts
-      let slug = "";
-      console.log(`[ categoryName ]:`, categoryName);
-      categoryName == "GB"
-        ? (slug = `/${slugPrefix}`)
-        : (slug = `/${slugify(categoryName, { lower: true })}/${slugPrefix}`);
-      console.log(`[ slug ]:`, slug);
+      // use lodash to chunk up all the posts in this category by the number of results/page we want.
+      let chunks = _.chunk(postsInThisCategory, resultsPerIndexPage);
 
-      // create an array of pageSlugs for each chunk of posts
-      let pageSlugs = [];
-      for (let i = 0; i < chunks.length; i++) {
-        let thisSlug = slug;
-        // If there is more than one page of results.
-        if (i > 0) {
-          thisSlug = `${i + 1}`;
+      // Filter the categoryName from the slug if the category is 'all'
+      let baseSlug =
+        categoryName == "any-all"
+          ? `/${slugPrefix}`
+          : `/${slugPrefix}${slugify(categoryName, { lower: true })}/`;
 
-          // check to see if the slug has a prefix
-          // don't want to add an addianal / if its not needed.
-          if (slug != "") {
-            thisSlug = `${slug}${i + 1}/`;
-          }
-        }
-        pageSlugs.push(`${thisSlug}`);
-      }
+      let indexPageSlugs = createIndexSlugsForChunksOfPosts(chunks, baseSlug);
 
-      // // construct an simple categoryData object to be passed to page to make UI easier.
+      // construct an simple categoryData object to be passed to page to make UI easier.
       categoryData.push({
         name: categoryName,
-        slug: slug,
-        numberOfPosts: allPostinCurrentCategory.length,
+        slug: baseSlug,
+        numberOfPosts: postsInThisCategory.length,
       });
 
-      pageDataForAllCategories.push({
+      return {
         categoryName: categoryName,
-        posts: allPostinCurrentCategory,
+        posts: postsInThisCategory,
         categoryData: categoryData,
         chunkedPosts: chunks,
-        numberOfPosts: allPostinCurrentCategory.length,
+        numberOfPosts: postsInThisCategory.length,
         numberOfPagesOfPosts: chunks.length,
-        pageSlugs: pageSlugs,
+        indexPageSlugs: indexPageSlugs,
+      };
+    });
+    return pageDataForAllCategories;
+  }
+
+  const getAllTypesAndCategories = (posts) => {
+    let uniqueTypes = getUniqueCategories(posts, "type"); // get unique types of post
+    uniqueTypes.push("any"); // allow for 'any' type of post
+
+    let uniqueCategories = getUniqueCategories(posts, "category"); // get unique categories of post
+    uniqueCategories.push("all"); // allow for 'all' categories of post
+
+    // get all type-category combinations
+    allTypesAndCategories = uniqueTypes.map((type) => {
+      return uniqueCategories.map((category) => {
+        return `${type.toLowerCase()}-${category.toLowerCase()}`;
       });
     });
 
-    // console.log(`[ categoryData ]:`, categoryData);
+    allTypesAndCategoriesObj = uniqueTypes.map((type) => {
+      return uniqueCategories.map((category) => {
+        currentType = type.toLowerCase();
+        currentCategory = category.toLowerCase();
+        key = `${currentType}-${currentCategory}`;
+        let obj = {};
+
+        obj[key] = {
+          type: currentType,
+          category: currentCategory,
+        };
+        console.log(`[ obj ]:`, obj);
+        return obj;
+      });
+    });
+
+    //return a flattend array of all the type-category combinations
+    return {
+      array: allTypesAndCategories.flat(),
+      object: allTypesAndCategoriesObj,
+    };
+  };
+
+  eleventyConfig.addCollection("postsByCategories", (collection) => {
+    everything = getAllTypesAndCategories(data);
+    allTypesAndCategories = everything.array;
+
+    console.log(`[ everything ]:`, everything.object);
+
+    let postsByCategories = [];
+    let pageDataForAllCategories = chunkPostsByTypeAndCategory(
+      (posts = data),
+      (typesAndCategories = everything.array),
+      (resultsPerIndexPage = 3)
+    );
+
+    // console.log(`[ pageDataForAllCategories ]:`, pageDataForAllCategories);
 
     // create an array containing all the posts and pagination data in postsByCategories
     pageDataForAllCategories.forEach((category) => {
-      let thisCategoriesPageSlugs = category.pageSlugs;
+      let thisCategoriesPageSlugs = category.indexPageSlugs;
 
       // loop each of the chunked posts
       category.chunkedPosts.forEach((posts, index) => {
@@ -196,10 +196,10 @@ module.exports = (eleventyConfig) => {
         });
       });
     });
-    console.log(
-      `[ postsByCategories ]:`,
-      util.inspect(postsByCategories, true, 6, true)
-    );
+    // console.log(
+    //   `[ postsByCategories ]:`,
+    //   util.inspect(postsByCategories, true, 6, true)
+    // );
     return postsByCategories;
   });
 

@@ -7,7 +7,9 @@ permalink: /
 <ul>
   {%- for post in collections.allPosts -%}
   <li>
-    <a href="{{ post.slug }}" class="">{{ post.country }} — {{ post.title }}</a>
+    <a href="{{ post.slug }}" class=""
+      >{{ post.title }}—{{ post.type }}–{{ post.category }}</a
+    >
   </li>
   {%- endfor -%}
 </ul>

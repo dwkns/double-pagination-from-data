@@ -16,7 +16,7 @@
   "scripts": {
     "start": "npm-run-all clean -p dev:* ",
     "dev": "npm-run-all clean -p dev:* ",
-    "dev:eleventy": "npx eleventy --serve",
+    "dev:eleventy": "npx eleventy --serve --quiet",
     "clean": "npx rimraf dist"
   }
 }

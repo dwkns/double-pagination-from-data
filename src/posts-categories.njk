@@ -13,7 +13,7 @@ permalink: /{{ postsCategories.slug }}/
   {%- for post in postsCategories.posts -%}
   <li>
     <a href="{{ post.slug }}" class=""
-      >{{ post.country }} — {{ post.title }}</a
+      >{{ post.title }}—{{post.type}}–{{post.category}}</a
     >
   </li>
   {%- endfor -%}
