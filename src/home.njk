@@ -5,7 +5,7 @@ permalink: /
 
 <p>All the posts</p>
 <ul>
-  {%- for post in collections.allPosts -%}
+  {%- for post in posts -%}
   <li>
     <a href="{{ post.slug }}" class=""
       >{{ post.title }}—{{ post.type }}–{{ post.category }}</a
@@ -14,14 +14,20 @@ permalink: /
   {%- endfor -%}
 </ul>
 
-{%- set categoryData = collections.postsByCategories[0].categoryData -%}
+{%- set metaCategories = collections.metaCategoriesCollection -%}
 <p>Paginated posts by country</p>
 <ul>
-  {%- for country in categoryData -%}
+  {%- for metaCategory in metaCategories['metaCategories'] -%}
   <li>
-    <a href="{{ country.slug }}" class="">{{ country.name }}</a>
+    {%- if metaCategory.numberOfPosts >0 -%}
+    <a href="{{ metaCategory.slug }}" class="">{{
+      metaCategory.metaCategoryName
+    }}</a>
+    — ({{ metaCategory.numberOfPosts }}) {%- else -%}
+    {{ metaCategory.metaCategoryName }} — ({{ metaCategory.numberOfPosts }}) {%-
+    endif -%}
   </li>
   {%- endfor -%}
 </ul>
 
-{# {% console categoryData, 'categoryData' %} #}
+{# {% console metaCategories, 'metaCategories' %} #}

@@ -1,17 +1,51 @@
 ---
 layout: page.njk
 pagination:
-  data: collections.postsByCategories
+  data: collections.indexPages
   size: 1
-  alias: postsCategories
-permalink: /{{ postsCategories.slug }}/
+  alias: metaCategory
+permalink: /{{ metaCategory.slug }}/
 ---
+{# {% console metaCategory, 'metaCategory' %} #}
+<style>
+.flex {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
 
-<h1>{{ postsCategories.categoryName }} posts page {{postsCategories.currentPage}} of {{postsCategories.totalPages}}</h1>
+.listItem {
+  list-style: none;
+}
+</style>
+{%- set metaCategories = collections.metaCategoriesCollection -%}
 
+
+
+<h1>{{ metaCategory.name }} posts page {{metaCategory.currentPage}} of {{metaCategory.totalPages}}</h1>
+<div class="flex">
+  <p class="">Types:</p>
+  <ul class="flex" >
+    {%- for type in metaCategories['uniqueTypes'] -%}
+    <li class="listItem">
+      <a href="{{ item.pageSlugs }}" class="">{{ type }}</a>
+    </li>
+    {%- endfor -%}
+  </ul>
+</div>
+<div class="flex">
+<p class="">Categories:</p>
+<ul class="flex" >
+{%- for type in metaCategories['uniqueCategories'] -%}
+      <li class="listItem">
+      <a href="{{ item.pageSlugs }}" class="">{{ type }}</a>
+    </li>
+{%- endfor -%}
+  </ul>
+</div>
 <ul>
-  {%- for post in postsCategories.posts -%}
-  <li>
+  {%- for post in metaCategory.posts -%}
+  <li class="listItem">
     <a href="{{ post.slug }}" class=""
       >{{ post.title }}—{{post.type}}–{{post.category}}</a
     >
@@ -19,42 +53,52 @@ permalink: /{{ postsCategories.slug }}/
   {%- endfor -%}
 </ul>
 
-{%- if postsCategories.totalPages > 1 -%}
 
 
-  {%- if postsCategories.isFirstPage -%}
+
+
+
+
+{%- if metaCategory.totalPages > 1 -%}
+
+<div class="flex">
+  
+  {%- if metaCategory.isFirstPage -%}
   <p>Previous</p>
   {%- else -%} 
-  {%- set slug = postsCategories.pageSlugs.previous -%}
+  {%- set slug = metaCategory.pageSlugs.previous -%}
   <a href="{{ slug if slug !='/' else '' }}">
     <p>Previous</p>
   </a>
   {%- endif -%}
-
-  <ul>
-    {%- for pageEntry in postsCategories.pageSlugs.all -%} {%- if
-    postsCategories.currentPage == loop.index -%}
-    <li>
-      {{ loop.index }}
-    </li>
-    {%- else -%}
-    <li>
-      {%- set slug = postsCategories.pageSlugs.all[loop.index - 1] -%}
-      <a
+  
+  <ul class="flex" >
+    {%- for pageEntry in metaCategory.pageSlugs.all -%} {%- if
+      metaCategory.currentPage == loop.index -%}
+      <li class="listItem">
+        {{ loop.index }}
+      </li>
+      {%- else -%}
+      <li class="listItem">
+        
+        {%- set slug = metaCategory.pageSlugs.all[loop.index - 1] -%}
+        
+        <a
         href="{{ slug if slug !='/' else '' }}"
         >{{ loop.index }}</a
       >
     </li>
     {%- endif -%} {%- endfor -%}
   </ul>
-
-  {%- if postsCategories.isLastPage -%}
+  
+  {%- if metaCategory.isLastPage -%}
   <p >Next</p>
-  {%- else -%} {%- set slug = postsCategories.pageSlugs.next -%}
+  {%- else -%} {%- set slug = metaCategory.pageSlugs.next -%}
   <a href="{{ baseURL }}{{ slug if slug !='/' else '' }}">
     <p >Next</p>
   </a>
   {%- endif -%}
 </div>
 
+</div>
 {%- endif -%}
