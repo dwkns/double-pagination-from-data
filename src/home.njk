@@ -13,6 +13,8 @@ permalink: /
 </ul>
 
 {%- set categoryData = collections.postsByCategories[0].categoryData -%}
+
+{% console  categoryData %}
 <p>Paginated posts by country</p>
 <ul>
   {%- for country in categoryData -%}
